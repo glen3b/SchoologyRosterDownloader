@@ -1,0 +1,32 @@
+{
+    "manifest_version": 2,
+    "name": "Schoology Roster Downloader",
+    "description": "Allows downloading rosters of your classmates",
+    "version": "1.0",
+    "icons": {
+        "512": "imgs/icon@512.png",
+        "128": "imgs/icon@128.png",
+        "64": "imgs/icon@64.png",
+        "48": "imgs/icon@48.png",
+        "32": "imgs/icon@32.png",
+        "16": "imgs/icon@16.png"
+    },
+    "permissions": [
+        "*://lms.lausd.net/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://lms.lausd.net/course/*/members",
+                "https://lms.lausd.net/group/*/members"
+            ],
+            "css": [
+                "css/memberlist.css"
+            ],
+            "js": [
+                "js/memberlist.js"
+            ],
+            "run_at": "document_end"
+        }
+    ]
+}

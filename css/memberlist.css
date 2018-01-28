@@ -1,0 +1,9 @@
+.download-roster-wrapper {
+    float: right;
+    position: relative;
+    margin-left: 4px;
+}
+
+.realm-top-right-expanded {
+    max-width: 40% !important;
+}
