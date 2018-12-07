@@ -33,36 +33,7 @@ function createClassElement(className, parent, elementType) {
     return newDiv;
 }
 
-function processEnrollmentTable(enrollmentTable, studentList) {
-    if (!studentList) {
-        studentList = [];
-    }
-    for (let child of enrollmentTable.firstElementChild.children) {
-        // tr
-        let userNameLink = child.getElementsByClassName("user-name")[0].firstElementChild;
-        let userNameParts = /^(.*?)(\s<[Bb]>(.*?)<\/[Bb]>)?$/.exec(userNameLink.innerHTML);
-        let userImageElem = child.getElementsByClassName("imagecache")[0];
-        studentList.push({ firstName: userNameParts[1] || null, lastName: userNameParts[3] || null, profileLink: userNameLink.href, profileImage: userImageElem.src });
-        //console.log(child.id);
-    }
-    return studentList;
-}
-
-function startNextIfCan(enrollmentViewWrapper) {
-    let viewNav = enrollmentViewWrapper.getElementsByClassName("enrollment-view-nav")[0];
-    let nextClassButtons = viewNav.getElementsByClassName("next");
-    if (nextClassButtons.length != 1) {
-        return false;
-    }
-    let nextClassButton = nextClassButtons[0];
-    if (nextClassButton.classList.contains("disabled")) {
-        return false;
-    }
-    nextClassButton.click();
-    return true;
-}
-
-function handleDownloadClick() {
+async function handleDownloadClick() {
     // init
     if (linkButton.classList.contains("active")) {
         // already doing this
@@ -70,48 +41,32 @@ function handleDownloadClick() {
     }
 
     linkButton.classList.add("active");
-    let enrollmentsWrapper = document.getElementById("roster-wrapper").getElementsByClassName("enrollments-wrapper")[0];
-    let studentList = processEnrollmentTable(enrollmentsWrapper.firstElementChild.firstElementChild.firstElementChild);
+    let realmType = window.location.pathname.includes("course/") ? "sections" : window.location.pathname.includes("group/") ? "groups" : "";
+    let realmId = window.location.pathname.match(/.*?(\d{3,}).*?/)[1];
+    
+    let studentList = "";
 
-    // it's not terribly clean, but we'll hook the UI
-    // id roster-wrapper
-    // class right
-    // observe class enrollments-wrapper
+    let enrollments = await fetchApiJson(`/${realmType}/${realmId}/enrollments`);
+    do {
+        for (let enrollment of enrollments.enrollment) {
+            studentList += [enrollment.name_title, enrollment.name_first, enrollment.name_middle, enrollment.name_last, enrollment.name_display, enrollment.school_uid, enrollment.picture_url].join("\t") + "\n";
+        }
 
-    let observer = new MutationObserver(function (mutations) {
-        mutations.forEach(function (mutation) {
-            for (let addedNode of mutation.addedNodes) {
-                if (addedNode.classList.contains("enrollment-view-wrapper")) {
-                    // TODO error check
-                    processEnrollmentTable(addedNode.getElementsByClassName("enrollment-user-list")[0].firstElementChild, studentList);
-                    if (!startNextIfCan(addedNode)) {
-                        finishListProcess(studentList, observer, linkButton);
-                    }
-                    break;
-                }
-            }
-        });
-    });
+        if (enrollments.links.next) {
+            enrollments = await (await fetchWithApiAuthentication(enrollments.links.next)).json();
+        } else {
+            enrollments = null;
+        }
+    } while (enrollments);
 
-    observer.observe(enrollmentsWrapper, { attributes: false, childList: true, characterData: true, subtree: true });
+    finishListProcess(studentList, linkButton);
 
-    // starts on current page (side effect of UI hook)
-    // bug or feature?
-    if (!startNextIfCan(enrollmentsWrapper.firstElementChild)) {
-        finishListProcess(studentList, observer, linkButton);
-    }
+    linkButton.classList.remove("active");
 }
 
-function serializeList(studentList) {
-    let result = "";
-    for (let student of studentList) {
-        result += `${student.firstName}\t${student.lastName || "<NULL>"}\t${student.profileLink}\t${student.profileImage}\n`;
-    }
-    return result;
-}
 
-function finishListProcess(studentList, observer, linkButton) {
-    let file_path = URL.createObjectURL(new Blob([serializeList(studentList)], { type: 'text/plain' }));
+function finishListProcess(studentList, linkButton) {
+    let file_path = URL.createObjectURL(new Blob([studentList], { type: 'text/plain' }));
     let a = document.createElement('A');
     a.href = file_path;
     a.download = "roster.tsv";
@@ -123,10 +78,6 @@ function finishListProcess(studentList, observer, linkButton) {
     // we can't clean up our generated blob URL because we don't know when the user will download
     // it will die when our page does
     document.body.removeChild(a);
-    if (observer) {
-        observer.disconnect();
-        observer = null;
-    }
-
+    
     linkButton.classList.remove("active");
 }

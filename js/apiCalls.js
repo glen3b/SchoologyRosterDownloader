@@ -20,9 +20,7 @@ function createFetchRateLimitWrapper(requestsPerInterval, interval) {
     function onIntervalReset() {
         callsThisCycle = 0;
         let countToDequeue = queue.length;
-        if (countToDequeue) {
-            Logger.log("Processing " + countToDequeue + " ratelimit-delayed queued requests");
-        }
+        
         for (let i = 0; i < countToDequeue; i++) {
             // note that this resolution might trigger stuff to be added to the queue again
             // that's why we store length before we iterate
@@ -146,7 +144,7 @@ function getUserId() {
 async function getApiKeysDirect() {
     let userId = getUserId();
     var apiKeys = null;
-    Logger.log(`Fetching API key for user ${userId}`);
+    console.log(`Fetching API key for user ${userId}`);
     let html = await (await fetch("https://lms.lausd.net/api", { credentials: "same-origin" })).text();
     let docParser = new DOMParser();
     let doc = docParser.parseFromString(html, "text/html");
@@ -154,17 +152,15 @@ async function getApiKeysDirect() {
     let key;
     let secret;
     if ((key = doc.getElementById("edit-current-key")) && (secret = doc.getElementById("edit-current-secret"))) {
-        Logger.log("API key already generated - storing");
         apiKeys = [key.value, secret.value, userId];
     } else {
-        Logger.log("API key not found - generating and trying again");
         let submitData = new FormData(doc.getElementById("s-api-register-form"));
         let generateFetch = await fetch("https://lms.lausd.net/api", {
             credentials: "same-origin",
             body: submitData,
             method: "post"
         });
-        Logger.log(`Generatekey response: ${generateFetch.status}`);
+        console.log(`Generatekey response: ${generateFetch.status}`);
         return await getApiKeysDirect();
     }
 

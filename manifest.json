@@ -12,7 +12,8 @@
         "16": "imgs/icon@16.png"
     },
     "permissions": [
-        "*://lms.lausd.net/*"
+        "*://lms.lausd.net/*",
+        "*://*.schoology.com/*"
     ],
     "content_scripts": [
         {
