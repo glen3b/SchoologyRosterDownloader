@@ -24,6 +24,7 @@
                 "css/memberlist.css"
             ],
             "js": [
+                "js/apiCalls.js",
                 "js/memberlist.js"
             ],
             "run_at": "document_end"

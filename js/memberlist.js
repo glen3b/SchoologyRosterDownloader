@@ -111,7 +111,7 @@ function serializeList(studentList) {
 }
 
 function finishListProcess(studentList, observer, linkButton) {
-    let file_path = URL.createObjectURL(new Blob([serializeList(studentList)], {type : 'text/plain'}));
+    let file_path = URL.createObjectURL(new Blob([serializeList(studentList)], { type: 'text/plain' }));
     let a = document.createElement('A');
     a.href = file_path;
     a.download = "roster.tsv";
