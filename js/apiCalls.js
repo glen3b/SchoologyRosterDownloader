@@ -20,7 +20,7 @@ function createFetchRateLimitWrapper(requestsPerInterval, interval) {
     function onIntervalReset() {
         callsThisCycle = 0;
         let countToDequeue = queue.length;
-        
+
         for (let i = 0; i < countToDequeue; i++) {
             // note that this resolution might trigger stuff to be added to the queue again
             // that's why we store length before we iterate
@@ -135,7 +135,17 @@ async function getApiKeys() {
  * Gets the current user's ID.
  */
 function getUserId() {
-    return document.querySelector("#profile > a").href.match(/\d+/)[0];
+    try {
+        return Number.parseInt(new URLSearchParams(document.querySelector("iframe[src*=session-tracker]").src.split("?")[1]).get("id"));
+    } catch (e) {
+        console.warn("Failed to get user ID from session tracker, using backup", e);
+        try {
+            return JSON.parse(document.querySelector("script:not([type]):not([src])").textContent.split("=")[1]).props.user.uid;
+        } catch (e2) {
+            console.error("Failed to get user ID from backup method", e2);
+            throw new Error("Failed to get user ID from backup method: " + e2.toString());
+        }
+    }
 }
 
 /**
