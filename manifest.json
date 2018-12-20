@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "Schoology Roster Downloader",
     "description": "Allows downloading rosters of your classmates",
-    "version": "1.0",
+    "version": "2.0",
     "icons": {
         "512": "imgs/icon@512.png",
         "128": "imgs/icon@128.png",
